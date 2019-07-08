@@ -11,7 +11,7 @@ trap "quit" exit INT TERM 0
 quit() {
 	usbip detach -p 00 > /dev/null 2>&1 && echo "Scanner detached"
 	sleep 1
-	knock 192.168.1.125 -d 100 $closePorts
+	knock $ip -d 100 $closePorts
 	exit
 }
 
@@ -36,7 +36,16 @@ sleep 1
 modprobe usbip-core
 modprobe vhci-hcd
 
-usbip attach -r $ip -b 1-1 && echo "Scanner attached"
+# vendor:product ids of desired printer to attach 
+# (uncomment and update the next line if you're using a USB hub or rpi with multiple USB ports)
+#ids=0000:0000
+if [ -z "$ids" ]; then
+  dev=1-1
+else
+  dev="$(usbip list -l | grep $ids | grep -oP "\d-\d\.\d")"
+fi
+
+usbip attach -r $ip -b $dev && echo "Scanner attached"
 
 # wait for user input before detaching
 read -p "Press [Enter] to detach scanner"
